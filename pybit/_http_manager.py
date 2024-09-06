@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
+from typing import Optional
 import time
 import hmac
 import hashlib
@@ -69,6 +70,7 @@ class _V5HTTPManager:
     api_secret: str = field(default=None)
     logging_level: logging = field(default=logging.INFO)
     log_requests: bool = field(default=False)
+    proxy: Optional[str] = field(default=None)
     timeout: int = field(default=10)
     recv_window: bool = field(default=5000)
     force_retry: bool = field(default=False)
@@ -116,7 +118,12 @@ class _V5HTTPManager:
 
         self.logger.debug("Initializing HTTP session.")
 
-        self.client = requests.Session()
+        self.client = requests.Session(
+            proxies={
+                "http": self.proxy,
+                "https": self.proxy
+            } if self.proxy else None
+        )
         self.client.headers.update(
             {
                 "Content-Type": "application/json",

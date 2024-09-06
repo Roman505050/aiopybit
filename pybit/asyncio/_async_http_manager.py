@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
+from typing import Optional
 import time
 import hmac
 import hashlib
@@ -71,6 +72,7 @@ class _V5ASYNCHTTPManager:
     logging_level: logging = field(default=logging.INFO)
     log_requests: bool = field(default=False)
     timeout: int = field(default=10)
+    proxy: Optional[str] = field(default=None)
     recv_window: bool = field(default=5000)
     force_retry: bool = field(default=False)
     retry_codes: defaultdict[dict] = field(
@@ -253,7 +255,11 @@ class _V5ASYNCHTTPManager:
                         request_func = client.post
                         request_kwargs = {"url": path, "data": req_params, "headers": headers}
 
-                    async with request_func(**request_kwargs, timeout=self.timeout) as response:
+                    async with request_func(
+                        **request_kwargs,
+                        timeout=self.timeout,
+                        proxy=self.proxy
+                    ) as response:
                         # Check HTTP status code before trying to decode JSON.
                         if response.status != 200:
                             if response.status == 403:
